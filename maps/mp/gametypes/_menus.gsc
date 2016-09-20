@@ -1,3 +1,5 @@
+/* vim: syntax=C++ */
+
 #include maps\mp\_utility;
 
 init()

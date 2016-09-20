@@ -1,3 +1,5 @@
+/* vim: syntax=C++ */
+
 #include common_scripts\utility;
 #include maps\mp\_utility;
 #include maps\mp\gametypes\_hud_util;
@@ -7,7 +9,7 @@ init()
 {
 	level.scoreInfo = [];
 	level.xpScale = getDvarInt( "scr_xpscale" );
-	
+
 	if ( level.xpScale > 4 || level.xpScale < 0)
 		exitLevel( false );
 
@@ -42,18 +44,18 @@ init()
 		registerScoreInfo( "suicide", 0 );
 		registerScoreInfo( "teamkill", 0 );
 	}
-	
+
 	registerScoreInfo( "win", 1 );
 	registerScoreInfo( "loss", 0.5 );
 	registerScoreInfo( "tie", 0.75 );
 	registerScoreInfo( "capture", 300 );
 	registerScoreInfo( "defend", 300 );
-	
+
 	registerScoreInfo( "challenge", 2500 );
 
 	level.maxRank = int(tableLookup( "mp/rankTable.csv", 0, "maxrank", 1 ));
 	level.maxPrestige = int(tableLookup( "mp/rankIconTable.csv", 0, "maxprestige", 1 ));
-	
+
 	pId = 0;
 	rId = 0;
 	for ( pId = 0; pId <= level.maxPrestige; pId++ )
@@ -65,7 +67,7 @@ init()
 	rankId = 0;
 	rankName = tableLookup( "mp/ranktable.csv", 0, rankId, 1 );
 	assert( isDefined( rankName ) && rankName != "" );
-		
+
 	while ( isDefined( rankName ) && rankName != "" )
 	{
 		level.rankTable[rankId][1] = tableLookup( "mp/ranktable.csv", 0, rankId, 1 );
@@ -76,23 +78,23 @@ init()
 		precacheString( tableLookupIString( "mp/ranktable.csv", 0, rankId, 16 ) );
 
 		rankId++;
-		rankName = tableLookup( "mp/ranktable.csv", 0, rankId, 1 );		
+		rankName = tableLookup( "mp/ranktable.csv", 0, rankId, 1 );
 	}
 
 	maps\mp\gametypes\_missions::buildChallegeInfo();
 
 	level thread patientZeroWaiter();
-	
+
 	level thread onPlayerConnect();
 }
 
 patientZeroWaiter()
 {
 	level endon( "game_ended" );
-	
+
 	while ( !isDefined( level.players ) || !level.players.size )
 		wait ( 0.05 );
-	
+
 	if ( !matchMakingGame() )
 	{
 		if ( (getDvar( "mapname" ) == "mp_rust" && randomInt( 1000 ) == 999) )
@@ -122,7 +124,7 @@ registerScoreInfo( type, value )
 
 getScoreInfoValue( type )
 {
-	overrideDvar = "scr_" + level.gameType + "_score_" + type;	
+	overrideDvar = "scr_" + level.gameType + "_score_" + type;
 	if ( getDvar( overrideDvar ) != "" )
 		return getDvarInt( overrideDvar );
 	else
@@ -184,14 +186,14 @@ onPlayerConnect()
 		player.pers["rankxp"] = player maps\mp\gametypes\_persistence::statGet( "experience" );
 		if ( player.pers["rankxp"] < 0 ) // paranoid defensive
 			player.pers["rankxp"] = 0;
-		
+
 		rankId = player getRankForXp( player getRankXP() );
 		player.pers[ "rank" ] = rankId;
 		player.pers[ "participation" ] = 0;
 
 		player.xpUpdateTotal = 0;
 		player.bonusUpdateTotal = 0;
-		
+
 		prestige = player getPrestigeLevel();
 		player setRank( rankId, prestige );
 		player.pers["prestige"] = prestige;
@@ -205,12 +207,12 @@ onPlayerConnect()
 									"ui_challenge_4_ref", "",
 									"ui_challenge_5_ref", "",
 									"ui_challenge_6_ref", "",
-									"ui_challenge_7_ref", "" 
+									"ui_challenge_7_ref", ""
 								);
 		}
 
 		player setClientDvar( 	"ui_promotion", 0 );
-		
+
 		if ( !isDefined( player.pers["summary"] ) )
 		{
 			player.pers["summary"] = [];
@@ -230,13 +232,13 @@ onPlayerConnect()
 
 
 		// resetting summary vars
-		
+
 		player setClientDvar( "ui_opensummary", 0 );
-		
+
 		player maps\mp\gametypes\_missions::updateChallenges();
 		player.explosiveKills[0] = 0;
 		player.xpGains = [];
-		
+
 		player.hud_scorePopup = newClientHudElem( player );
 		player.hud_scorePopup.horzAlign = "center";
 		player.hud_scorePopup.vertAlign = "middle";
@@ -253,7 +255,7 @@ onPlayerConnect()
 		player.hud_scorePopup.color = (0.5,0.5,0.5);
 		player.hud_scorePopup.sort = 10000;
 		player.hud_scorePopup maps\mp\gametypes\_hud::fontPulseInit( 3.0 );
-		
+
 		player thread onPlayerSpawned();
 		player thread onJoinedTeam();
 		player thread onJoinedSpectators();
@@ -308,12 +310,12 @@ roundUp( floatVal )
 giveRankXP( type, value )
 {
 	self endon("disconnect");
-	
+
 	lootType = "none";
-	
+
 	if ( !self rankingEnabled() )
 		return;
-	
+
 	if ( level.teamBased && (!level.teamCount["allies"] || !level.teamCount["axis"]) )
 		return;
 	else if ( !level.teamBased && (level.teamCount["allies"] + level.teamCount["axis"] < 2) )
@@ -324,10 +326,10 @@ giveRankXP( type, value )
 
 	if ( !isDefined( self.xpGains[type] ) )
 		self.xpGains[type] = 0;
-	
+
 	momentumBonus = 0;
 	gotRestXP = false;
-	
+
 	switch( type )
 	{
 		case "kill":
@@ -353,7 +355,7 @@ giveRankXP( type, value )
 			}
 
 			value = int( value * level.xpScale );
-			
+
 			restXPAwarded = getRestXPAward( value );
 			value += restXPAwarded;
 			if ( restXPAwarded > 0 )
@@ -365,17 +367,17 @@ giveRankXP( type, value )
 			}
 			break;
 	}
-	
+
 	if ( !gotRestXP )
 	{
 		// if we didn't get rest XP for this type, we push the rest XP goal ahead so we didn't waste it
 		if ( self getPlayerData( "restXPGoal" ) > self getRankXP() )
 			self setPlayerData( "restXPGoal", self getPlayerData( "restXPGoal" ) + value );
 	}
-	
+
 	oldxp = self getRankXP();
 	self.xpGains[type] += value;
-	
+
 	self incRankXP( value );
 
 	if ( self rankingEnabled() && updateRank( oldxp ) )
@@ -428,7 +430,7 @@ giveRankXP( type, value )
 			self.pers["summary"]["challenge"] += value;
 			self.pers["summary"]["xp"] += value;
 			break;
-			
+
 		default:
 			self.pers["summary"]["misc"] += value;	//keeps track of ungrouped match xp reward
 			self.pers["summary"]["match"] += value;
@@ -447,11 +449,11 @@ updateRank( oldxp )
 	rankId = self.pers["rank"];
 	self.pers["rank"] = newRankId;
 
-	//self logString( "promoted from " + oldRank + " to " + newRankId + " timeplayed: " + self maps\mp\gametypes\_persistence::statGet( "timePlayedTotal" ) );		
+	//self logString( "promoted from " + oldRank + " to " + newRankId + " timeplayed: " + self maps\mp\gametypes\_persistence::statGet( "timePlayedTotal" ) );
 	println( "promoted " + self.name + " from rank " + oldRank + " to " + newRankId + ". Experience went from " + oldxp + " to " + self getRankXP() + "." );
-	
+
 	self setRank( newRankId );
-	
+
 	return true;
 }
 
@@ -465,23 +467,23 @@ updateRankAnnounceHUD()
 
 	team = self.pers["team"];
 	if ( !isdefined( team ) )
-		return;	
+		return;
 
 	// give challenges and other XP a chance to process
 	// also ensure that post game promotions happen asap
 	if ( !levelFlag( "game_over" ) )
 		level waittill_notify_or_timeout( "game_over", 0.25 );
-	
-	
-	newRankName = self getRankInfoFull( self.pers["rank"] );	
+
+
+	newRankName = self getRankInfoFull( self.pers["rank"] );
 	rank_char = level.rankTable[self.pers["rank"]][1];
 	subRank = int(rank_char[rank_char.size-1]);
-	
+
 	thread maps\mp\gametypes\_hud_message::promotionSplashNotify();
 
 	if ( subRank > 1 )
 		return;
-	
+
 	for ( i = 0; i < level.players.size; i++ )
 	{
 		player = level.players[i];
@@ -497,7 +499,7 @@ updateRankAnnounceHUD()
 
 endGameUpdate()
 {
-	player = self;			
+	player = self;
 }
 
 
@@ -532,19 +534,19 @@ scorePopup( amount, bonus, hudColor, glowAlpha )
 	self.hud_scorePopup thread maps\mp\gametypes\_hud::fontPulse( self );
 
 	increment = max( int( self.bonusUpdateTotal / 20 ), 1 );
-		
+
 	if ( self.bonusUpdateTotal )
 	{
 		while ( self.bonusUpdateTotal > 0 )
 		{
 			self.xpUpdateTotal += min( self.bonusUpdateTotal, increment );
 			self.bonusUpdateTotal -= min( self.bonusUpdateTotal, increment );
-			
+
 			self.hud_scorePopup setValue( self.xpUpdateTotal );
-			
+
 			wait ( 0.05 );
 		}
-	}	
+	}
 	else
 	{
 		wait ( 1.0 );
@@ -552,8 +554,8 @@ scorePopup( amount, bonus, hudColor, glowAlpha )
 
 	self.hud_scorePopup fadeOverTime( 0.75 );
 	self.hud_scorePopup.alpha = 0;
-	
-	self.xpUpdateTotal = 0;		
+
+	self.xpUpdateTotal = 0;
 }
 
 removeRankHUD()
@@ -562,10 +564,10 @@ removeRankHUD()
 }
 
 getRank()
-{	
+{
 	rankXp = self.pers["rankxp"];
 	rankId = self.pers["rank"];
-	
+
 	if ( rankXp < (getRankInfoMinXP( rankId ) + getRankInfoXPAmt( rankId )) )
 		return rankId;
 	else
@@ -584,7 +586,7 @@ getRankForXp( xpVal )
 	rankId = 0;
 	rankName = level.rankTable[rankId][1];
 	assert( isDefined( rankName ) );
-	
+
 	while ( isDefined( rankName ) && rankName != "" )
 	{
 		if ( xpVal < getRankInfoMinXP( rankId ) + getRankInfoXPAmt( rankId ) )
@@ -596,7 +598,7 @@ getRankForXp( xpVal )
 		else
 			rankName = undefined;
 	}
-	
+
 	rankId--;
 	return rankId;
 }
@@ -625,13 +627,13 @@ incRankXP( amount )
 
 	if ( isDefined( self.isCheater ) )
 		return;
-	
+
 	xp = self getRankXP();
 	newXp = (xp + amount);
-	
+
 	if ( self.pers["rank"] == level.maxRank && newXp >= getRankInfoMaxXP( level.maxRank ) )
 		newXp = getRankInfoMaxXP( level.maxRank );
-	
+
 	self.pers["rankxp"] = newXp;
 }
 
@@ -639,19 +641,19 @@ getRestXPAward( baseXP )
 {
 	if ( !getdvarint( "scr_restxp_enable" ) )
 		return 0;
-	
+
 	restXPAwardRate = getDvarFloat( "scr_restxp_restedAwardScale" ); // as a fraction of base xp
-	
+
 	wantGiveRestXP = int(baseXP * restXPAwardRate);
 	mayGiveRestXP = self getPlayerData( "restXPGoal" ) - self getRankXP();
-	
+
 	if ( mayGiveRestXP <= 0 )
 		return 0;
-	
+
 	// we don't care about giving more rest XP than we have; we just want it to always be X2
 	//if ( wantGiveRestXP > mayGiveRestXP )
 	//	return mayGiveRestXP;
-	
+
 	return wantGiveRestXP;
 }
 
@@ -660,18 +662,18 @@ isLastRestXPAward( baseXP )
 {
 	if ( !getdvarint( "scr_restxp_enable" ) )
 		return false;
-	
+
 	restXPAwardRate = getDvarFloat( "scr_restxp_restedAwardScale" ); // as a fraction of base xp
-	
+
 	wantGiveRestXP = int(baseXP * restXPAwardRate);
 	mayGiveRestXP = self getPlayerData( "restXPGoal" ) - self getRankXP();
 
 	if ( mayGiveRestXP <= 0 )
 		return false;
-	
+
 	if ( wantGiveRestXP >= mayGiveRestXP )
 		return true;
-		
+
 	return false;
 }
 
@@ -681,6 +683,6 @@ syncXPStat()
 		exitLevel( false );
 
 	xp = self getRankXP();
-	
+
 	self maps\mp\gametypes\_persistence::statSet( "experience", xp );
 }

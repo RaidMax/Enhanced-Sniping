@@ -1,3 +1,5 @@
+/* vim: syntax=C++ */
+
 #include common_scripts\utility;
 // check if below includes are removable
 #include maps\mp\_utility;

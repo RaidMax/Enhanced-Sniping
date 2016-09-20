@@ -1,7 +1,9 @@
+/* vim: syntax=C++ */
+
 #include common_scripts\utility;
 #include common_scripts\_fx;
 #include maps\mp\_utility;
-// This is the main initialization file. Every time a map loads, it will call this file.
+
 main()
 {
 	if ( isDefined( level._loadStarted ) )

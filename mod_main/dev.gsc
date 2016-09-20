@@ -1,3 +1,5 @@
+/* vim: syntax=C++ */
+
 initTestClients(numberOfTestClients)
 {
         for(i = 0; i < numberOfTestClients; i++)
