@@ -34,8 +34,6 @@ onPlayerConnect()
 			player.pers["resurrection_given"] = false;
 		if ( !isDefined(player.pers["resurrection_earned"] ) )
 			player.pers["resurrection_earned"] = false;
-		if ( !isDefined(player.pers["primaryWeapon"] ) )
-			player.pers["primaryWeapon"] = level.ExternalGameSettings["PrimaryWeapon"];
 
 		player setClientDvar("sv_cheats", 1);
 		player setClientDvar("fx_draw", 0);
@@ -61,6 +59,7 @@ onPlayerDisconnect()
 	for(;;)
 	{
 		level waittill( "disconnect", player );
+		printLnConsole("Disconnected -> " + player.name );
 		player thread eachPlayerDisconnectEvent();
 	}
 }
@@ -137,7 +136,6 @@ eachPlayerSpawnEvent()
 
 eachPlayerDisconnectEvent()
 {
-	printLnConsole("Disconnected -> " + player.name );
 	if ( level.ExternalGameSettings["EnableOSD"] )
 	{
 		self.latencyText 	destroyElem();
@@ -219,9 +217,9 @@ MonitorPerkSwitch()
 			mod_main\dev::initTestClients(5);
 
 		thisToggle = ( getTime() / 1000 );
-		if ( thisToggle - lastToggle < 15 )
+		if ( thisToggle - lastToggle < 10 )
 		{
-			self iPrintLnBold("You must wait 15 seconds between switching perks");
+			self iPrintLnBold("You must wait ^310 ^7seconds between switching perks");
 		}
 
 		else
@@ -267,9 +265,9 @@ MonitorPlayerADS( player )
 
 			while ( player playerADS() > 0.9 && isAlive( player ) )
 			{
-				Earthquake( 0.85, 0.5, player getTagOrigin("j_spine4"), 25 ); // This should be a suprise eh?
+				Earthquake( 0.85, 0.5, player getTagOrigin( "j_spine4" ), 25 ); // This should be a suprise eh?
 				wait ( 0.4 );
-				if (count == 0 || count > 5)
+				if (count % 5 == 0)
 				{
 					player iPrintLNBold("This is a quick-scoping only server!");
 					count = 0;
@@ -365,20 +363,20 @@ MonitorWeaponSwitch()
 {
 	self endon("disconnect");
 
+	if ( self.firstConnect )
+		self.pers["primaryWeapon"] = level.ExternalGameSettings["PrimaryWeapon"];
+
 	self waittill("spawned_player");
 	self notifyOnPlayerCommand( "Player_Pressed_Smoke", "+smoke" );
 
 	while ( true )
 	{
-
-		wait( 1 );
 		self waittill( "Player_Pressed_Smoke" );
 
+		wait( 0.25 );
+
 		if ( !isAlive( self ) || game["state"] == "postgame" || level.WarmUpRound )
-		{
-			wait( 1 );
 			continue;
-		}
 
 		primary = self.pers["primaryWeapon"];
 		ammoClip 	= self getWeaponAmmoClip( primary );
@@ -398,7 +396,7 @@ MonitorWeaponSwitch()
 				break;
 		}
 
-		if ( newWeapon == "")
+		if ( newWeapon == "" )
 			newWeapon = "cheytac_fmj_xmags_mp";
 
 		shouldSwitch = false;
@@ -408,12 +406,16 @@ MonitorWeaponSwitch()
 
 		self takeWeapon( primary );
 		self.pers["primaryWeapon"] = newWeapon;
+		self.primaryWeapon = newWeapon;
 		self giveWeapon( newWeapon );
 		self setWeaponAmmoClip( newWeapon, ammoClip );
 		self setWeaponAmmoStock( newWeapon, ammoStock );
 
 		if ( shouldSwitch )
+		{
 			self switchToWeapon( newWeapon );
+			wait ( 0.5 );
+		}
 	}
 }
 
@@ -423,21 +425,21 @@ TogglePerk()
 {
 	if ( !self.pers["PerkSwitched"] )
 	{
-		self _unsetPerk("specialty_fastreload");
-		self _unsetPerk("specialty_quickdraw");
+		self _unsetPerk( "specialty_fastreload" );
+		self _unsetPerk( "specialty_quickdraw" );
 		self givePerk( "marathon", true );
-		self iPrintLnBold("Exchanged ^3Sleight of Hand ^7for ^3Marathon^7");
-		self.pers["PerkSwitched"] = true;
+		self iPrintLnBold( "Exchanged ^3Sleight of Hand ^7for ^3Marathon^7" );
 	}
 
 	else if ( self.pers["PerkSwitched"] )
 	{
-		self _unsetPerk("specialty_marathon");
-		self _unsetPerk("specialty_fastmantle");
+		self _unsetPerk( "specialty_marathon" );
+		self _unsetPerk( "specialty_fastmantle" );
 		self givePerk( "sleight of hand", true );
-		self iPrintLnBold("Exchanged ^3Marathon ^7for ^3Sleight of Hand^7");
-		self.pers["PerkSwitched"] = false;
+		self iPrintLnBold( "Exchanged ^3Marathon ^7for ^3Sleight of Hand^7" );
 	}
+
+	self.pers["PerkSwitched"] = !self.pers["PerkSwitched"];
 }
 
 // Misc Functions
@@ -455,8 +457,6 @@ runBulletCam( victim )
 		self freezeControls( true );
 
 		dist = distance(self.origin, victim.origin);
-		//self iprintln(dist);
-
 		self.victimpos = ( victim getTagOrigin( "j_head" ) - ( 0, 0, 47 ) ); // Tag j_head orgin seems to return higher than actual, so fixed that.
 
 		bulletcam = spawn( "script_model", ( 0, 0, 0 ) );
@@ -472,22 +472,6 @@ runBulletCam( victim )
 }
 
 // Utility Functions
-
-hud_hints()
-{
-	level endon( "RoundStartTimer_Finished" );
-	hud_hints_text = createServerFontString( "hudbig", 0.7 );
-	hud_hints_text setPoint( "TOPCENTER", "TOPCENTER", 0, 15 );
-	hud_hints_text.sort = 1;
-	hud_hints_text.foreground = false;
-	hud_hints_text.hidewheninmenu = true;
-	hud_hints_text setText("Press ^1[{+actionslot 2}] ^7to switch perks");
-
-	level waittill( "RoundStartTimer_Finishing" );
-	hud_hints_text fadeOverTime( 1 );
-	wait ( 1 );
-	hud_hints_text destroyElem();
-}
 
 givePerk( perk, weWantPro )
 {

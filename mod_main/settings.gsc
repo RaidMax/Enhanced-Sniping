@@ -17,7 +17,7 @@ LoadGameSettings()
 	LocalGameSettings["PlayerMaxHealth"]					= 20; // I guess we want 1 shot for snipers...
 	LocalGameSettings["GameSpeed"]								= 190;
 
-	LocalGameSettings["DEV"]											= true;
+	LocalGameSettings["DEV"]											= false;
 
 	// Loadout Settings
 	LocalGameSettings["PrimaryWeapon"] 				= "cheytac_fmj_xmags_mp";
